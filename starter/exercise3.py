@@ -25,11 +25,28 @@ class Cart:
         # TODO: validate FIRST, then mutate.
         #   if qty < 1:                 raise ValueError(...)
         #   if not item["available"]:   raise OutOfStockError(...)
-        raise NotImplementedError
+        if qty < 1:
+            raise ValueError("Quantity must be at least 1.")
+        if not item["available"]:
+            raise OutOfStockError(f"{item['name']} is unavailable.")
+        for line in self.lines:
+            if line["item_id"] == item["id"]:
+                line["qty"] += qty
+                return
+        self.lines.append({
+            "item_id": item["id"],
+            "name": item["name"],
+            "price": item["price"],
+            "qty": qty,
+        })
 
     def remove_item(self, item_id: int) -> None:
         # TODO: raise KeyError if the item is not in the cart
-        raise NotImplementedError
+        for index, line in enumerate(self.lines):
+            if line["item_id"] == item_id:
+                del self.lines[index]
+                return
+        raise KeyError(f"Item {item_id} is not in the cart.")
 
     def total(self) -> float:
         return round(sum(line["price"] * line["qty"] for line in self.lines), 2)
@@ -52,3 +69,17 @@ if __name__ == "__main__":
     # except ValueError as e:
     #     print(f"Rejected: {e}")
 
+    try:
+        cart.add_item(gyoza, 0)
+    except ValueError as e:
+        print(f"Rejected: {e}")
+
+    try:
+        cart.add_item(miso)
+    except OutOfStockError as e:
+        print(f"Rejected: {e}")
+
+    try:
+        cart.remove_item(gyoza["id"])
+    except KeyError as e:
+        print(f"Rejected: {e.args[0]}")
